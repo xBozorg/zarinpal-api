@@ -10,6 +10,7 @@ import (
 
 	"github.com/xbozorg/zarinpal-api/config"
 	"github.com/xbozorg/zarinpal-api/entity"
+	"github.com/xbozorg/zarinpal-api/validation"
 )
 
 const (
@@ -24,12 +25,14 @@ const (
 
 /*
 Errors :
+	Code 10 -> payment validator
 	Code 11 -> payment marshaling
 	Code 12 -> new payment request
 	Code 13 -> send payment request
 	Code 14 -> read payment response body
 	Code 15 -> unmarshaling payment response
 
+	Code 30 -> verification validator
 	Code 31 -> verification marshaling
 	Code 32 -> new verification request
 	Code 33 -> send verification request
@@ -93,7 +96,16 @@ III) Gets a JSON response and unmarshals it to entity.PaymentResponse :
 	      Authority string `json:"Authority"`              --> 36 Digits
      }
 */
-func (z ZarinPal) PaymentRequest(req entity.PaymentRequest) (entity.PaymentResponse, error) {
+func (z ZarinPal) PaymentRequest(req entity.PaymentRequest, validator validation.ValidatePaymentRequest) (entity.PaymentResponse, error) {
+
+	err := validator(req)
+
+	if err != nil {
+		return entity.PaymentResponse{}, ZarinpalError{
+			Code:    10,
+			Message: fmt.Sprintf("payment validator : %s", err.Error()),
+		}
+	}
 
 	marshaledRequest, err := json.Marshal(req)
 	if err != nil {
@@ -181,7 +193,15 @@ IV) Gets a JSON response and unmarshals it to entity.PaymentVerificationResponse
     }
 */
 
-func (z ZarinPal) PaymentVerification(req entity.PaymentVerificationRequest) (entity.PaymentVerificationResponse, error) {
+func (z ZarinPal) PaymentVerification(req entity.PaymentVerificationRequest, validator validation.ValidatePaymentVerificationRequest) (entity.PaymentVerificationResponse, error) {
+
+	err := validator(req)
+	if err != nil {
+		return entity.PaymentVerificationResponse{}, ZarinpalError{
+			Code:    30,
+			Message: fmt.Sprintf("verification validator : %s", err.Error()),
+		}
+	}
 
 	marshaledRequest, err := json.Marshal(req)
 	if err != nil {
