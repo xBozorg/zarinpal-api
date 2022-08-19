@@ -44,7 +44,7 @@ Add `Payment Response Data`'s `Authority` field in previous step to `GatewayURL`
 
 Payment Link : https://sandbox.zarinpal.com/pg/StartPay/000000000000000000000000000000111111
 
-## 4 - Payment Verification Data
+## 5 - Payment Verification Data
 Get `Status` and `Authority` query parameter values at the end of your `CallbackURL`:
 
 - CallbackURL -> https://example.com/payment/check
@@ -58,7 +58,7 @@ verificationRequestData := entity.PaymentVerificationRequest{
 }
 ```
 
-## 4 - Payment Verification
+## 6 - Payment Verification
 ```go
 verificationResponse, err := z.PaymentVerification(
     verificationRequestData,
@@ -66,7 +66,7 @@ verificationResponse, err := z.PaymentVerification(
 )
 ```
 
-## 5 - Check Verification Response
+## 7 - Check Verification Response
 If `verificationResponse`'s `Status` field == 100 or 101 it means that the payment was successful.
 - Status = 100 : Successful / First Verification
 - Status = 101 : Successful / Already Verified
