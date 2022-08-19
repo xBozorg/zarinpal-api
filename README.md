@@ -1,5 +1,5 @@
 # Zarinpal API in Go
-
+Please read [zarinpal docs](https://docs.zarinpal.com/paymentGateway/guide/) first
 
 ## 0 - Installation
 
@@ -68,6 +68,8 @@ verificationResponse, err := z.PaymentVerification(
 
 ## 5 - Check Verification Response
 If `verificationResponse`'s `Status` field == 100 or 101 it means that the payment was successful.
+- Status = 100 : Successful / First Verification
+- Status = 101 : Successful / Already Verified
 
 ---
 
