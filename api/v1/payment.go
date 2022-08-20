@@ -142,6 +142,7 @@ func (z ZarinPal) PaymentRequest(req entity.PaymentRequest, validator validation
 			Message: fmt.Sprintf("send payment request : %s", err.Error()),
 		}
 	}
+	defer paymentResponse.Body.Close()
 
 	responseBytes, err := io.ReadAll(paymentResponse.Body)
 	if err != nil {
@@ -238,6 +239,7 @@ func (z ZarinPal) PaymentVerification(req entity.PaymentVerificationRequest, val
 			Message: fmt.Sprintf("send verification request : %s", err.Error()),
 		}
 	}
+	defer verificationResponse.Body.Close()
 
 	responseBytes, err := io.ReadAll(verificationResponse.Body)
 	if err != nil {
