@@ -1,4 +1,4 @@
-package entity
+package zarinpal
 
 type PaymentRequest struct {
 	MerchantID  string            `json:"MerchantID"`

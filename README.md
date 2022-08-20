@@ -1,11 +1,14 @@
 # Zarinpal API in Go
 Please read [zarinpal docs](https://docs.zarinpal.com/paymentGateway/guide/) first
 
-## 0 - Installation
-
-
+## Installation
 ```go
-go get github.com/xbozorg/zarinpal-api/api/v1
+go get github.com/xbozorg/zarinpal-api
+```
+
+## 0 - Import
+```go
+import "github.com/xbozorg/zarinpal-api"
 ```
 
 ## 1 - Zarinpal instance
@@ -15,12 +18,12 @@ const (
 	sandbox    = true
 )
 // new zarinpal instance
-var z = v1.New(merchantID, sandbox) 
+var z = zarinpal.New(merchantID, sandbox) 
 ```
 
 ## 2 - Payment Request Data
 ```go
-PaymentRequestData := entity.PaymentRequest{
+PaymentRequestData := zarinpal.PaymentRequest{
     MerchantID:  z.MerchantID,
     Amount:      110000,
     Description: "test",
@@ -32,7 +35,7 @@ PaymentRequestData := entity.PaymentRequest{
 ```go
 PaymentResponseData, err := z.PaymentRequest(
     PaymentRequestData, 
-    validation.ValidatePayment(),
+    zarinpal.ValidatePayment(),
 )
 ```
 
@@ -51,7 +54,7 @@ Get `Status` and `Authority` query parameter values at the end of your `Callback
 - Zarinpal redirects to -> https://example.com/payment/check?Authority=exampleAurhority&Status=exampleStatus
 
 ```go
-verificationRequestData := entity.PaymentVerificationRequest{
+verificationRequestData := zarinpal.PaymentVerificationRequest{
     MerchantID: z.MerchantID,
     Amount:     110000,
     Authority:  "000000000000000000000000000000111111",
@@ -62,7 +65,7 @@ verificationRequestData := entity.PaymentVerificationRequest{
 ```go
 verificationResponse, err := z.PaymentVerification(
     verificationRequestData,
-    validation.ValidatePaymentVerification(),
+    zarinpal.ValidatePaymentVerification(),
 )
 ```
 
@@ -92,10 +95,10 @@ Code 35 -> unmarshaling verification response
 ##  Error handling
 ```go
 if err != nil {
-    if err.(v1.ZarinpalError).Code == 10 {
+    if err.(zarinpal.Err).Code == 10 {
         // ...
     }
-    if err.(v1.ZarinpalError).Code == 11 {
+    if err.(zarinpal.Err).Code == 11 {
         // ...
     }
 }

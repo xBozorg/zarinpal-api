@@ -1,17 +1,16 @@
-package validation
+package zarinpal
 
 import (
 	"errors"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
-	"github.com/xbozorg/zarinpal-api/entity"
 )
 
 type (
-	ValidatePaymentRequest             func(req entity.PaymentRequest) error
-	ValidateGatewayResponse            func(resp entity.GatewayResponse) error
-	ValidatePaymentVerificationRequest func(req entity.PaymentVerificationRequest) error
+	ValidatePaymentRequest             func(req PaymentRequest) error
+	ValidateGatewayResponse            func(resp GatewayResponse) error
+	ValidatePaymentVerificationRequest func(req PaymentVerificationRequest) error
 )
 
 func statusCheck(str string) validation.RuleFunc {
@@ -25,7 +24,7 @@ func statusCheck(str string) validation.RuleFunc {
 }
 
 func ValidatePayment() ValidatePaymentRequest {
-	return func(req entity.PaymentRequest) error {
+	return func(req PaymentRequest) error {
 		return validation.ValidateStruct(&req,
 			validation.Field(&req.MerchantID, validation.Required, validation.Length(36, 36)),
 			validation.Field(&req.Amount, validation.Required, validation.Min(1000)),
@@ -40,7 +39,7 @@ func ValidatePayment() ValidatePaymentRequest {
 }
 
 func ValidateGateway() ValidateGatewayResponse {
-	return func(req entity.GatewayResponse) error {
+	return func(req GatewayResponse) error {
 		return validation.ValidateStruct(&req,
 			validation.Field(&req.Status, validation.Required, validation.By(statusCheck(req.Status))),
 			validation.Field(&req.Authority, validation.Required, is.Digit, validation.Length(36, 36)),
@@ -49,7 +48,7 @@ func ValidateGateway() ValidateGatewayResponse {
 }
 
 func ValidatePaymentVerification() ValidatePaymentVerificationRequest {
-	return func(req entity.PaymentVerificationRequest) error {
+	return func(req PaymentVerificationRequest) error {
 		return validation.ValidateStruct(&req,
 			validation.Field(&req.MerchantID, validation.Required, validation.Length(36, 36)),
 			validation.Field(&req.Amount, validation.Required, validation.Min(1000)),

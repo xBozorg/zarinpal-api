@@ -1,4 +1,4 @@
-package v1
+package zarinpal
 
 import (
 	"bytes"
@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"github.com/xbozorg/zarinpal-api/config"
-	"github.com/xbozorg/zarinpal-api/entity"
-	"github.com/xbozorg/zarinpal-api/validation"
 )
 
 const (
@@ -23,32 +21,6 @@ const (
 	SandboxPaymentGatewayURL = "https://sandbox.zarinpal.com/pg/StartPay/"
 	SandboxVerificationURL   = "https://sandbox.zarinpal.com/pg/rest/WebGate/PaymentVerification.json"
 )
-
-/*
-Errors :
-
-	Code 10 -> payment validator
-	Code 11 -> payment marshaling
-	Code 12 -> new payment request
-	Code 13 -> send payment request
-	Code 14 -> read payment response body
-	Code 15 -> unmarshaling payment response
-
-	Code 30 -> verification validator
-	Code 31 -> verification marshaling
-	Code 32 -> new verification request
-	Code 33 -> send verification request
-	Code 34 -> read verification response
-	Code 35 -> unmarshaling verification response
-*/
-type ZarinpalError struct {
-	Code    uint8
-	Message string
-}
-
-func (ze ZarinpalError) Error() string {
-	return fmt.Sprintf("zarinpal-error %d - %s", ze.Code, ze.Message)
-}
 
 type ZarinPal struct {
 	MerchantID    string
@@ -83,7 +55,7 @@ func New(merchantID string, sandbox bool) ZarinPal {
 /*
 	<Step 1>
 
-I) Gets entity.PaymentRequest :
+I) Gets PaymentRequest :
 
 	{
 	     MerchantID  string            `json:"MerchantID"`  --> Required / 36 Characters
@@ -95,19 +67,19 @@ I) Gets entity.PaymentRequest :
 
 II) Sends a POST request with data in I) to ZarinPal.DefaultConfig.PaymentURL --> "https://api.zarinpal.com/pg/v4/payment/request.json" or "https://sandbox.zarinpal.com/pg/rest/WebGate/PaymentRequest.json"
 
-III) Gets a JSON response and unmarshals it to entity.PaymentResponse :
+III) Gets a JSON response and unmarshals it to PaymentResponse :
 
 	     {
 	          Status    int    `json:"Status"`                 --> 100 : request is OK
 		      Authority string `json:"Authority"`              --> 36 Digits
 	     }
 */
-func (z ZarinPal) PaymentRequest(req entity.PaymentRequest, validator validation.ValidatePaymentRequest) (entity.PaymentResponse, error) {
+func (z ZarinPal) PaymentRequest(req PaymentRequest, validator ValidatePaymentRequest) (PaymentResponse, error) {
 
 	err := validator(req)
 
 	if err != nil {
-		return entity.PaymentResponse{}, ZarinpalError{
+		return PaymentResponse{}, Err{
 			Code:    10,
 			Message: fmt.Sprintf("payment validator : %s", err.Error()),
 		}
@@ -115,7 +87,7 @@ func (z ZarinPal) PaymentRequest(req entity.PaymentRequest, validator validation
 
 	marshaledRequest, err := json.Marshal(req)
 	if err != nil {
-		return entity.PaymentResponse{}, ZarinpalError{
+		return PaymentResponse{}, Err{
 			Code:    11,
 			Message: fmt.Sprintf("payment marshaling : %s", err.Error()),
 		}
@@ -127,7 +99,7 @@ func (z ZarinPal) PaymentRequest(req entity.PaymentRequest, validator validation
 		bytes.NewReader(marshaledRequest),
 	)
 	if err != nil {
-		return entity.PaymentResponse{}, ZarinpalError{
+		return PaymentResponse{}, Err{
 			Code:    12,
 			Message: fmt.Sprintf("new payment request : %s", err.Error()),
 		}
@@ -137,7 +109,7 @@ func (z ZarinPal) PaymentRequest(req entity.PaymentRequest, validator validation
 	client := http.Client{Timeout: 10 * time.Second}
 	paymentResponse, err := client.Do(paymentRequest)
 	if err != nil {
-		return entity.PaymentResponse{}, ZarinpalError{
+		return PaymentResponse{}, Err{
 			Code:    13,
 			Message: fmt.Sprintf("send payment request : %s", err.Error()),
 		}
@@ -146,17 +118,17 @@ func (z ZarinPal) PaymentRequest(req entity.PaymentRequest, validator validation
 
 	responseBytes, err := io.ReadAll(paymentResponse.Body)
 	if err != nil {
-		return entity.PaymentResponse{}, ZarinpalError{
+		return PaymentResponse{}, Err{
 			Code:    14,
 			Message: fmt.Sprintf("read payment response body : %s", err.Error()),
 		}
 	}
 
-	responseJSON := entity.PaymentResponse{}
+	responseJSON := PaymentResponse{}
 
 	err = json.Unmarshal(responseBytes, &responseJSON)
 	if err != nil {
-		return entity.PaymentResponse{}, ZarinpalError{
+		return PaymentResponse{}, Err{
 			Code:    15,
 			Message: fmt.Sprintf("unmarshaling payment response : %s", err.Error()),
 		}
@@ -189,7 +161,7 @@ II) Gets that GatewayResponse and a PaymentVerificationRequest :
 
 III) Sends a POST request with data in II) to ZarinPal.DefaultConfig.VerificationURL --> "https://api.zarinpal.com/pg/v4/payment/verify.json" or "https://sandbox.zarinpal.com/pg/rest/WebGate/PaymentVerification.json"
 
-IV) Gets a JSON response and unmarshals it to entity.PaymentVerificationResponse :
+IV) Gets a JSON response and unmarshals it to PaymentVerificationResponse :
     {
 	    Status   int    `json:"Status"`    --> 100 or 101 : verified
 	    RefID    int    `json:"RefID"`     --> zarinpal's transaction refID
@@ -200,11 +172,11 @@ IV) Gets a JSON response and unmarshals it to entity.PaymentVerificationResponse
     }
 */
 
-func (z ZarinPal) PaymentVerification(req entity.PaymentVerificationRequest, validator validation.ValidatePaymentVerificationRequest) (entity.PaymentVerificationResponse, error) {
+func (z ZarinPal) PaymentVerification(req PaymentVerificationRequest, validator ValidatePaymentVerificationRequest) (PaymentVerificationResponse, error) {
 
 	err := validator(req)
 	if err != nil {
-		return entity.PaymentVerificationResponse{}, ZarinpalError{
+		return PaymentVerificationResponse{}, Err{
 			Code:    30,
 			Message: fmt.Sprintf("verification validator : %s", err.Error()),
 		}
@@ -212,7 +184,7 @@ func (z ZarinPal) PaymentVerification(req entity.PaymentVerificationRequest, val
 
 	marshaledRequest, err := json.Marshal(req)
 	if err != nil {
-		return entity.PaymentVerificationResponse{}, ZarinpalError{
+		return PaymentVerificationResponse{}, Err{
 			Code:    31,
 			Message: fmt.Sprintf("verification marshaling : %s", err.Error()),
 		}
@@ -224,7 +196,7 @@ func (z ZarinPal) PaymentVerification(req entity.PaymentVerificationRequest, val
 		bytes.NewReader(marshaledRequest),
 	)
 	if err != nil {
-		return entity.PaymentVerificationResponse{}, ZarinpalError{
+		return PaymentVerificationResponse{}, Err{
 			Code:    32,
 			Message: fmt.Sprintf("new verification request : %s", err.Error()),
 		}
@@ -234,7 +206,7 @@ func (z ZarinPal) PaymentVerification(req entity.PaymentVerificationRequest, val
 	client := http.Client{Timeout: 10 * time.Second}
 	verificationResponse, err := client.Do(verificationRequest)
 	if err != nil {
-		return entity.PaymentVerificationResponse{}, ZarinpalError{
+		return PaymentVerificationResponse{}, Err{
 			Code:    33,
 			Message: fmt.Sprintf("send verification request : %s", err.Error()),
 		}
@@ -243,17 +215,17 @@ func (z ZarinPal) PaymentVerification(req entity.PaymentVerificationRequest, val
 
 	responseBytes, err := io.ReadAll(verificationResponse.Body)
 	if err != nil {
-		return entity.PaymentVerificationResponse{}, ZarinpalError{
+		return PaymentVerificationResponse{}, Err{
 			Code:    34,
 			Message: fmt.Sprintf("read verification response : %s", err.Error()),
 		}
 	}
 
-	responseJSON := entity.PaymentVerificationResponse{}
+	responseJSON := PaymentVerificationResponse{}
 
 	err = json.Unmarshal(responseBytes, &responseJSON)
 	if err != nil {
-		return entity.PaymentVerificationResponse{}, ZarinpalError{
+		return PaymentVerificationResponse{}, Err{
 			Code:    35,
 			Message: fmt.Sprintf("unmarshaling verification response : %s", err.Error()),
 		}
