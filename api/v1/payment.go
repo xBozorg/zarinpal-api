@@ -4,7 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
+
 	"net/http"
 	"time"
 
@@ -25,6 +26,7 @@ const (
 
 /*
 Errors :
+
 	Code 10 -> payment validator
 	Code 11 -> payment marshaling
 	Code 12 -> new payment request
@@ -78,23 +80,27 @@ func New(merchantID string, sandbox bool) ZarinPal {
 	}
 }
 
-/* <Step 1>
+/*
+	<Step 1>
+
 I) Gets entity.PaymentRequest :
-   {
-        MerchantID  string            `json:"MerchantID"`  --> Required / 36 Characters
-        Amount      uint              `json:"Amount"`      --> Required / Amount in Rial
-        Description string            `json:"Description"` --> Required
-        CallbackURL string            `json:"CallbackURL"` --> Required
-        Metadata    map[string]string `json:"metadata"`    --> Optional / {"mobile":"09111111111","email":"example@gmail.com"}
-   }
+
+	{
+	     MerchantID  string            `json:"MerchantID"`  --> Required / 36 Characters
+	     Amount      uint              `json:"Amount"`      --> Required / Amount in Rial
+	     Description string            `json:"Description"` --> Required
+	     CallbackURL string            `json:"CallbackURL"` --> Required
+	     Metadata    map[string]string `json:"metadata"`    --> Optional / {"mobile":"09111111111","email":"example@gmail.com"}
+	}
 
 II) Sends a POST request with data in I) to ZarinPal.DefaultConfig.PaymentURL --> "https://api.zarinpal.com/pg/v4/payment/request.json" or "https://sandbox.zarinpal.com/pg/rest/WebGate/PaymentRequest.json"
 
 III) Gets a JSON response and unmarshals it to entity.PaymentResponse :
-     {
-          Status    int    `json:"Status"`                 --> 100 : request is OK
-	      Authority string `json:"Authority"`              --> 36 Digits
-     }
+
+	     {
+	          Status    int    `json:"Status"`                 --> 100 : request is OK
+		      Authority string `json:"Authority"`              --> 36 Digits
+	     }
 */
 func (z ZarinPal) PaymentRequest(req entity.PaymentRequest, validator validation.ValidatePaymentRequest) (entity.PaymentResponse, error) {
 
@@ -137,7 +143,7 @@ func (z ZarinPal) PaymentRequest(req entity.PaymentRequest, validator validation
 		}
 	}
 
-	responseBytes, err := ioutil.ReadAll(paymentResponse.Body)
+	responseBytes, err := io.ReadAll(paymentResponse.Body)
 	if err != nil {
 		return entity.PaymentResponse{}, ZarinpalError{
 			Code:    14,
@@ -233,7 +239,7 @@ func (z ZarinPal) PaymentVerification(req entity.PaymentVerificationRequest, val
 		}
 	}
 
-	responseBytes, err := ioutil.ReadAll(verificationResponse.Body)
+	responseBytes, err := io.ReadAll(verificationResponse.Body)
 	if err != nil {
 		return entity.PaymentVerificationResponse{}, ZarinpalError{
 			Code:    34,
