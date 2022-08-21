@@ -28,9 +28,9 @@ type ZarinPal struct {
 	DefaultConfig config.Config
 }
 
-func New(merchantID string, sandbox bool) ZarinPal {
+func New(merchantID string, sandbox bool) *ZarinPal {
 	if sandbox {
-		return ZarinPal{
+		return &ZarinPal{
 			MerchantID: merchantID,
 			Sandbox:    sandbox,
 			DefaultConfig: config.Config{
@@ -41,7 +41,7 @@ func New(merchantID string, sandbox bool) ZarinPal {
 		}
 	}
 
-	return ZarinPal{
+	return &ZarinPal{
 		MerchantID: merchantID,
 		Sandbox:    sandbox,
 		DefaultConfig: config.Config{
