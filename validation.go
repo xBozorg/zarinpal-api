@@ -38,13 +38,12 @@ func ValidatePayment() ValidatePaymentRequest {
 	}
 }
 
-func ValidateGateway() ValidateGatewayResponse {
-	return func(req GatewayResponse) error {
-		return validation.ValidateStruct(&req,
-			validation.Field(&req.Status, validation.Required, validation.By(statusCheck(req.Status))),
-			validation.Field(&req.Authority, validation.Required, is.Digit, validation.Length(36, 36)),
-		)
-	}
+// make a GatewayResponse struct and give it to this validator to validate callback query params from zarinpal
+func ValidateGateway(resp GatewayResponse) error {
+	return validation.ValidateStruct(&resp,
+		validation.Field(&resp.Status, validation.Required, validation.By(statusCheck(resp.Status))),
+		validation.Field(&resp.Authority, validation.Required, is.Digit, validation.Length(36, 36)),
+	)
 }
 
 func ValidatePaymentVerification() ValidatePaymentVerificationRequest {
